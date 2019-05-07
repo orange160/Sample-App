@@ -39,7 +39,7 @@ class SessionsController < ApplicationController
     opts['client_id'] = ENV['WEIBO_APPKEY']
     opts['client_secret'] = ENV['WEIBO_APPSECRET']
     opts['grant_type'] = 'authorization_code'
-    opts['redirect_uri'] = '39.106.184.102/weibologin'
+    opts['redirect_uri'] = ENV['WEIBO_RE_URI']
     opts['code'] = code
 
     uri = URI.parse(url)
