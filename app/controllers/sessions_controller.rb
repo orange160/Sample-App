@@ -25,4 +25,12 @@ class SessionsController < ApplicationController
     log_out if logged_in?
     redirect_to root_path
   end
+
+  def weibo_login
+    code = params[:code]
+    logger.info('code: ' + code)
+
+    redirect_to root_path
+  end
+
 end
