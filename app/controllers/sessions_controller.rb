@@ -1,4 +1,9 @@
+require 'net/https'
+require 'uri'
+
 class SessionsController < ApplicationController
+
+
   def new
   end
 
@@ -28,7 +33,27 @@ class SessionsController < ApplicationController
 
   def weibo_login
     code = params[:code]
-    logger.info('code: ' + code)
+
+    url = "https://api.weibo.com/"
+    opts = {}
+    opts['client_id'] = ENV['WEIBO_APPKEY']
+    opts['client_secret'] = ENV['WEIBO_APPSECRET']
+    opts['grant_type'] = 'authorization_code'
+    opts['redirect_uri'] = '39.106.184.102/weibologin'
+    opts['code'] = code
+
+    uri = URI.parse(url)
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = true
+    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    http.start do |http|
+      req = Net::HTTP::Post.new('/oauth2/access_token')
+      req.set_form_data(opts)
+      resp = http.request(req).body
+      logger.info(resp)
+    end
+
+
 
     redirect_to root_path
   end
