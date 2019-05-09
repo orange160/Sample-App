@@ -70,7 +70,7 @@ class SessionsController < ApplicationController
   end
 
   #在数据库中创建用户
-  def create_user(id, name, type)
+  def create_user(id, name, avatar, type)
     user = User.new(:name=>name,
                     :email=>id.to_s+"@example.com",
                     :password_digest=>id.to_s,
@@ -79,12 +79,9 @@ class SessionsController < ApplicationController
                     :activated=>1,
                     :activated_at=>Time.zone.now,
                     :login_type=>'weibo',
-                    :other_id=>id)
-    if user.save?
-      logger.info('other type user information save OK')
-    else 
-      logger.info('other type user information save failed')
-    end
+                    :other_id=>id,
+                    :avatar_url=>avatar)
+    user.save
   end
 
   def weibo_login
@@ -102,11 +99,12 @@ class SessionsController < ApplicationController
 
     id = @userInfo['id']
     name = @userInfo['name']
+    avatar_url = @userInfo['avatar_large']
 
     # 用户存在，则直接登录，否则，创建用户，然后登录
     if check_user_eixts?(id) == false
       logger.info('LYJ user not exist, start to create')
-      create_user(id, name, 'weibo')
+      create_user(id, name, avatar_url, 'weibo')
     end
 
 
