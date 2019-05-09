@@ -31,10 +31,9 @@ class SessionsController < ApplicationController
     redirect_to root_path
   end
 
-  def weibo_login
-    code = params[:code]
-
-    url = "https://api.weibo.com/"
+  # Get access token by post method with code
+  def weibo_get_accesstoken(code)
+    ret = {}
     opts = {}
     opts['client_id'] = ENV['WEIBO_APPKEY']
     opts['client_secret'] = ENV['WEIBO_APPSECRET']
@@ -42,20 +41,43 @@ class SessionsController < ApplicationController
     opts['redirect_uri'] = ENV['WEIBO_RE_URI']
     opts['code'] = code
 
-    uri = URI.parse(url)
+    uri = URI.parse('https://api.weibo.com/')
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = true
     http.verify_mode = OpenSSL::SSL::VERIFY_NONE
     http.start do |http|
       req = Net::HTTP::Post.new('/oauth2/access_token')
       req.set_form_data(opts)
-      resp = http.request(req).body
-      logger.info(resp)
+
+      resp = http.request(req).body  #post方式
+      ret = JSON.parse(resp)
+    end
+    ret
+  end
+
+  # Get the weibo authorization user's information
+  def weibo_get_userInfo(access_token, uid)
+    url = "https://api.weibo.com/2/users/show.json?uid=#{uid}&access_token=#{access_token}"
+    uri = URI(url)
+    resp = Net::HTTP.get(uri)
+    JSON.parse(resp)
+  end
+
+  def weibo_login
+    @userInfo = nil
+    resp = weibo_get_accesstoken(params[:code])
+    access_token = resp['access_token']
+    uid = resp['uid']
+    expires_in = resp['expires_in']
+
+    logger.info("access token: " + access_token + "====" + expires_in.to_s)
+
+    if access_token != nil
+      @userInfo = weibo_get_userInfo(access_token, uid)
     end
 
 
-
-    redirect_to root_path
+    #redirect_to root_path
   end
 
 end

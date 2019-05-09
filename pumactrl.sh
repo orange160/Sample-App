@@ -13,6 +13,7 @@ case "$1" in
     kill `cat tmp/pids/puma.pid`
     ;;
   reload)
+    rm -rf log/development.log
     echo "reloading puma..."
     kill `cat tmp/pids/puma.pid`
     bundle exec puma
