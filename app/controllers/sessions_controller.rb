@@ -63,21 +63,59 @@ class SessionsController < ApplicationController
     JSON.parse(resp)
   end
 
+  #检查用户是否存在，存在返回true，否则，返回false
+  def check_user_eixts?(id)
+    user = User.find_by(other_id: id)
+    user == nil ? false : true
+  end
+
+  #在数据库中创建用户
+  def create_user(id, name, type)
+    user = User.new(:name=>name,
+                    :email=>id.to_s+"@example.com",
+                    :password_digest=>id.to_s,
+                    :created_at=>Time.zone.now,
+                    :updated_at=>Time.zone.now,
+                    :activated=>1,
+                    :activated_at=>Time.zone.now,
+                    :login_type=>'weibo',
+                    :other_id=>id)
+    if user.save?
+      logger.info('other type user information save OK')
+    else 
+      logger.info('other type user information save failed')
+    end
+  end
+
   def weibo_login
     @userInfo = nil
+
+    #获取access_token等信息
     resp = weibo_get_accesstoken(params[:code])
     access_token = resp['access_token']
     uid = resp['uid']
     expires_in = resp['expires_in']
 
-    logger.info("access token: " + access_token + "====" + expires_in.to_s)
-
     if access_token != nil
       @userInfo = weibo_get_userInfo(access_token, uid)
     end
 
+    id = @userInfo['id']
+    name = @userInfo['name']
 
-    #redirect_to root_path
+    # 用户存在，则直接登录，否则，创建用户，然后登录
+    if check_user_eixts?(id) == false
+      logger.info('LYJ user not exist, start to create')
+      create_user(id, name, 'weibo')
+    end
+
+
+    #微博账号登录
+    user = User.find_by(other_id: id)
+    if user && user.activated?
+      log_in user
+      redirect_back_or user
+    end
   end
 
 end

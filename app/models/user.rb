@@ -109,6 +109,7 @@ class User < ApplicationRecord
     following.include?(other_user)
   end
 
+
   #创建并渎职激活令牌和摘要
   private
   def create_activation_digest
